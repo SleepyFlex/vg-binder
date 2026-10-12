@@ -1,6 +1,6 @@
 # Vanguard Web Scraper
 
-https://img.shields.io/badge/Status-Still_In_Development-FFCA88
+![Status](https://img.shields.io/badge/Status-Still_In_Development-FFCA88)
 
 ## Setup
 Create a virtual environment and activate it
