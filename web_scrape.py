@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
+from rich.progress import track
 
 '''
 This script helps scrape content from the web based on user url
@@ -180,11 +181,11 @@ def scrape(page_url):
         else:
             card_names.append(last_element)
 
-        for name in card_names:
+        for name in track(card_names, description="[cyan]Collecting card data..."):
             card_info = extract_content(name)
             if card_info:
                 card_data.append(card_info)
-            print("Data collected")
+
     else:
         print("Somthing Went Wrong somewhere pls try again")
 
