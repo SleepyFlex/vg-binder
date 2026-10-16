@@ -3,6 +3,7 @@ import sys
 import questionary
 
 import save
+import view
 import web_scrape
 
 
@@ -35,6 +36,14 @@ def main():
                 print("ERROR")
                 return
 
+            show = questionary.select(
+                 "Would you like to see the data first?",
+                 choices=["Yes", "No"]
+             ).ask()
+
+            if show == "Yes":
+                view.generate_table(unsave_content)
+
             testing = questionary.select(
                 "Select Output Format",
                 choices=["CSV", "JSON"]
@@ -48,6 +57,7 @@ def main():
 
         elif extract == "Exit" or extract is None:
             sys.exit(0)
+
 
 if __name__ == "__main__":
 

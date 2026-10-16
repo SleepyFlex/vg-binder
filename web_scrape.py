@@ -63,7 +63,7 @@ def check_url(page_url) -> bool:
         print("URL is no valid")
     return check_url
 
-def extract_last_element(page_url):
+def extract_last_element(page_url) -> BeautifulSoup:
     """
     Get the last element of the url
 
