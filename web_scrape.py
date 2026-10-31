@@ -1,3 +1,4 @@
+import os
 import re
 import time
 from urllib.parse import urlparse
@@ -13,6 +14,10 @@ This script helps scrape content from the web based on user url
 api_url = "https://cardfight.fandom.com/api.php"
 card_data = []
 card_names = []
+headers = {
+    "User-Agent": "VGBinderApp/1.0",
+    "Referer": "https://cardfight.fandom.com/",
+}
 
 def get_html(title) -> BeautifulSoup:
     """
@@ -32,9 +37,9 @@ def get_html(title) -> BeautifulSoup:
         "prop": "text"
     }
 
-    headers = {
-        "User-Agent": "VGBinderApp/1.0"
-    }
+    # headers = {
+    #     "User-Agent": "VGBinderApp/1.0"
+    # }
 
     response = requests.get(api_url, params=params, headers=headers)
     data = response.json()
@@ -118,6 +123,55 @@ def extract_name(title) -> list:
 
     return card_names
 
+def extract_image(card_name, extract_data, soup, folder="./bin") -> dict:
+    """
+    Extract out the image and save/add it
+
+    Parameter:
+    card_name (str): name of the card
+    extract_data (dict): use the current dictionary provided
+    soup (BeautifulSoup): use the current html content
+    folder (str): folder to save to default ./bin
+
+    Return:
+    dict: name, power, critical ,clan and image
+    """
+    extract_data["image"] = None
+
+    for img in soup.find_all("img"):
+        link = str(img.get("data-src") or img.get("src") or "")
+
+        # Get image only, reject others(example: icon etc.)
+        if "static.wikia.nocookie.net" not in link:
+            continue
+
+        # headers = {
+        #     "User-Agent": "VGBinderApp/1.0",
+        #     "Referer": "https://cardfight.fandom.com/",
+        # }
+
+        full_size = link.split("/revision/latest")[0]
+        for image_url in (full_size, link):
+            response = requests.get(image_url, headers=headers)
+            content_type = response.headers.get("Content-Type", "")
+
+            if response.ok and content_type.startswith("image"):
+                extension = "." + content_type.split("/")[1].split(";")[0]
+                safe_name = re.sub(r"[^\w\-]", "_", card_name)
+                # Get rid of extra underscore
+                safe_name = re.sub(r"_+", "_", safe_name).strip("_")
+                file_path = os.path.join(folder, safe_name + extension)
+
+                with open(file_path, "wb") as f:
+                    f.write(response.content)
+
+                extract_data["image"] = file_path
+                break
+
+        if extract_data["image"]:
+            break
+    return extract_data
+
 def extract_content(card_name) -> dict:
     """
     Base on the card name retrive the info specified
@@ -158,6 +212,8 @@ def extract_content(card_name) -> dict:
     else:
         extract_data["effect"] = None
 
+    extract_image(card_name, extract_data, soup)
+
     time.sleep(0.4)
     return extract_data
 
@@ -195,7 +251,8 @@ def main():
     """Example execution"""
 
     # URL sample
-    page_url = "https://cardfight.fandom.com/wiki/Trial_Deck_1:_Blaster_Blade"
+    # page_url = "https://cardfight.fandom.com/wiki/Trial_Deck_1:_Blaster_Blade"
+    page_url = "https://cardfight.fandom.com/wiki/Blaster_Blade"
 
     # Run the pipeline
     scrape(page_url)
